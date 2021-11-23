@@ -100,9 +100,13 @@ const sendBody = (fetchRes, res) => {
     }
 
     const contentType = res.getHeader('content-type')
-    const bodyCharset = charset(contentType) || 'utf8'
+    let bodyCharset = charset(contentType) || 'utf8'
     const src = decode(body, bodyCharset)
     const filtered = filterBody(src)
+    if (bodyCharset === 'iso-8859-1') {
+      res.setHeader('content-type', `${contentType.split(';')[0]}; charset=utf-8`)
+      bodyCharset = 'utf-8'
+    }
     const resBody = encode(filtered, bodyCharset)
     res.end(resBody, bodyCharset)
   })
