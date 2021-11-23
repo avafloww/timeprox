@@ -3,8 +3,7 @@ const fetch = require('node-fetch')
 const http = require('http')
 const { decode, encode } = require('iconv-lite')
 
-const port = 3000
-const year = 1998
+const port = 8888
 const proxyName = 'timeprox'
 
 process.on('uncaughtException', e => { console.error(e) })
@@ -35,11 +34,9 @@ const log = msg => {
   console.log(`[${formatDate()}] ${msg}`)
 }
 
-const arcUrl = url => {
-  const { pathname } = new URL(url)
-  return /^\/web\/\d+(im_)?\//.test(pathname)
-    ? `https://web.archive.org${pathname}`
-    : `https://web.archive.org/web/${year}0101/${url}`
+const arcUrl = (host, path) => {
+  const url = new URL(path, `http://${host}`)
+  return `https://web.archive.org/web/20050101id_/${url}`
 }
 
 const filterBody = body => body
@@ -115,7 +112,7 @@ const notFound = res => res.writeHead(404).end(`${proxyName}: Not Found`)
 const serverError = (res, e) => res.writeHead(500).end(`${proxyName}: Server Error\n\n${e}`)
 
 const server = http.createServer((req, res) => {
-  fetch(arcUrl(req.url)).then(fetchRes => {
+  fetch(arcUrl(req.headers.host, req.url)).then(fetchRes => {
     log(`${req.url} => ${fetchRes.url}`)
     if (isFetchResTs404(fetchRes)) return notFound(res)
     // if (!isFetchResYear(year, fetchRes)) return notFound(res)
